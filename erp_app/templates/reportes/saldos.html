@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Saldos - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Reporte de Saldos</h2>
+</div>
+
+<h3 style="margin-bottom: 20px; color: #667eea;">Saldos de Clientes</h3>
+
+{% if clientes %}
+<table>
+    <thead>
+        <tr>
+            <th>Cliente</th>
+            <th>Total Pedidos</th>
+            <th>Saldo</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cliente in clientes %}
+        <tr>
+            <td><strong>{{ cliente.nombre }}</strong></td>
+            <td>{{ cliente.pedidos|length }}</td>
+            <td>${{ "%.2f"|format(cliente.saldo) }}</td>
+            <td>
+                {% if cliente.saldo > 0 %}
+                <span class="badge badge-danger">Debe: ${{ "%.2f"|format(cliente.saldo) }}</span>
+                {% elif cliente.saldo < 0 %}
+                <span class="badge badge-success">Pagado: ${{ "%.2f"|format(-cliente.saldo) }}</span>
+                {% else %}
+                <span class="badge badge-info">Saldo 0</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color: #a0aec0;">No hay clientes registrados.</p>
+{% endif %}
+
+<h3 style="margin-top: 40px; margin-bottom: 20px; color: #667eea;">Saldos de Proveedores</h3>
+
+{% if proveedores %}
+<table>
+    <thead>
+        <tr>
+            <th>Proveedor</th>
+            <th>Productos</th>
+            <th>Saldo</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for proveedor in proveedores %}
+        <tr>
+            <td><strong>{{ proveedor.nombre }}</strong></td>
+            <td>{{ proveedor.productos|length }}</td>
+            <td>${{ "%.2f"|format(proveedor.saldo) }}</td>
+            <td>
+                {% if proveedor.saldo > 0 %}
+                <span class="badge badge-warning">Debe pagar: ${{ "%.2f"|format(proveedor.saldo) }}</span>
+                {% elif proveedor.saldo < 0 %}
+                <span class="badge badge-success">Pagado extra</span>
+                {% else %}
+                <span class="badge badge-info">Saldo 0</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color: #a0aec0;">No hay proveedores registrados.</p>
+{% endif %}
+{% endblock %}

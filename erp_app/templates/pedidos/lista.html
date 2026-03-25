@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Pedidos - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Pedidos</h2>
+    <a href="{{ url_for('nuevo_pedido') }}" class="btn btn-success">+ Nuevo Pedido</a>
+</div>
+
+<div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <input type="text" id="filtro" placeholder="🔍 Buscar por número, cliente, fecha..." style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+</div>
+
+{% if pedidos %}
+<table id="tablaPedidos">
+    <thead>
+        <tr>
+            <th>Número</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Total Venta</th>
+            <th>Costo</th>
+            <th>Resultado</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pedido in pedidos %}
+        <tr class="fila-pedido" data-busqueda="{{ pedido.numero.lower() }} {{ pedido.cliente.nombre.lower() }} {{ pedido.fecha_venta.strftime('%d/%m/%Y').lower() }}">
+            <td><strong>{{ pedido.numero }}</strong></td>
+            <td>{{ pedido.fecha_venta.strftime('%d/%m/%Y') }}</td>
+            <td>{{ pedido.cliente.nombre }}</td>
+            <td style="text-align: right;">${{ pedido.precio_venta_total | eur }}</td>
+            <td style="text-align: right;">${{ pedido.costo_total | eur }}</td>
+            <td style="text-align: right;">${{ pedido.resultado | eur }}</td>
+            <td>
+                {% if pedido.entregado %}
+                <span class="badge badge-success">Entregado</span>
+                {% elif pedido.cargado %}
+                <span class="badge badge-info">Cargado</span>
+                {% else %}
+                <span class="badge" style="background: #e2e8f0; color: #2d3748;">Pendiente</span>
+                {% endif %}
+            </td>
+            <td class="actions">
+                <a href="{{ url_for('ver_pedido', id=pedido.id) }}" class="btn btn-secondary" style="padding: 6px 10px; font-size: 11px;">Ver</a>
+                <a href="{{ url_for('editar_pedido', id=pedido.id) }}" class="btn" style="padding: 6px 10px; font-size: 11px;">Editar</a>
+                <button onclick="eliminar({{ pedido.id }}, '{{ pedido.numero }}')" class="btn btn-danger" style="padding: 6px 10px; font-size: 11px;">Eliminar</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="header" style="text-align: center; color: #a0aec0;">
+    <p>No hay pedidos aún. <a href="{{ url_for('nuevo_pedido') }}">Crear el primer pedido</a></p>
+</div>
+{% endif %}
+
+<script>
+// Filtro de búsqueda
+document.getElementById('filtro')?.addEventListener('keyup', function() {
+    const filtro = this.value.toLowerCase();
+    const filas = document.querySelectorAll('.fila-pedido');
+    filas.forEach(fila => {
+        const busqueda = fila.getAttribute('data-busqueda');
+        fila.style.display = busqueda.includes(filtro) ? '' : 'none';
+    });
+});
+
+function eliminar(id, numero) {
+    if (confirm(`¿Está seguro de que desea eliminar el pedido "${numero}"?`)) {
+        fetch(`/pedidos/${id}/eliminar`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(e => alert('Error: ' + e));
+    }
+}
+</script>
+{% endblock %}

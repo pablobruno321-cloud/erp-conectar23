@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}{% if cotizacion %}Editar{% else %}Nueva{% endif %} Cotización - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>{% if cotizacion %}Editar Cotización{% else %}Nueva Cotización{% endif %}</h2>
+</div>
+
+<div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <form method="POST">
+        <div class="form-group">
+            <label for="producto_id">Producto *</label>
+            <select name="producto_id" id="producto_id" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+                <option value="">Seleccionar producto...</option>
+                {% for prod in productos %}
+                <option value="{{ prod.id }}" {% if cotizacion and cotizacion.producto_id == prod.id %}selected{% endif %}>
+                    {{ prod.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+                <label for="fecha_desde">Fecha Desde *</label>
+                <input type="date" name="fecha_desde" id="fecha_desde" 
+                    value="{{ cotizacion.fecha_desde.strftime('%Y-%m-%d') if cotizacion else '' }}" 
+                    required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+            </div>
+            
+            <div class="form-group">
+                <label for="fecha_hasta">Fecha Hasta *</label>
+                <input type="date" name="fecha_hasta" id="fecha_hasta" 
+                    value="{{ cotizacion.fecha_hasta.strftime('%Y-%m-%d') if cotizacion else '' }}" 
+                    required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+                <label for="costo_unitario">Costo Unitario $ *</label>
+                <input type="number" name="costo_unitario" id="costo_unitario" 
+                    value="{{ "%.2f"|format(cotizacion.costo_unitario) if cotizacion else '' }}" 
+                    step="0.01" min="0" required 
+                    style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;"
+                    onchange="calcularPrecioVenta()">
+            </div>
+            
+            <div class="form-group">
+                <label for="margen_ganancia">Margen de Ganancia % *</label>
+                <input type="number" name="margen_ganancia" id="margen_ganancia" 
+                    value="{{ cotizacion.margen_ganancia if cotizacion else margen_default }}" 
+                    step="0.1" min="0" required 
+                    style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;"
+                    onchange="calcularPrecioVenta()">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Precio de Venta $ (Calculado)</label>
+            <div style="padding: 10px; background: #f7fafc; border-radius: 6px; font-size: 13px; font-weight: 600; color: #667eea;">
+                $ <span id="precio_venta_display">{{ "%.2f"|format(cotizacion.precio_venta) if cotizacion else '0,00' }}</span>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 25px;">
+            <button type="submit" class="btn btn-success" style="flex: 1; padding: 12px;">
+                {% if cotizacion %}Guardar Cambios{% else %}Crear Cotización{% endif %}
+            </button>
+            <a href="{{ url_for('listar_cotizaciones') }}" class="btn" style="flex: 1; padding: 12px; text-align: center;">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 13px;
+    color: #2d3748;
+}
+</style>
+
+<script>
+function calcularPrecioVenta() {
+    const costo = parseFloat(document.getElementById('costo_unitario').value) || 0;
+    const margen = parseFloat(document.getElementById('margen_ganancia').value) || 0;
+    
+    const precio_venta = costo * (1 + margen / 100);
+    
+    // Formatear a europeo
+    const formatter = new Intl.NumberFormat('es-AR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    
+    document.getElementById('precio_venta_display').textContent = formatter.format(precio_venta);
+}
+
+// Calcular al cargar si existe valor
+window.addEventListener('load', calcularPrecioVenta);
+</script>
+{% endblock %}

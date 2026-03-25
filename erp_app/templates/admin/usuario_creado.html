@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Usuario Creado - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Usuario Creado Exitosamente</h2>
+</div>
+
+<div style="max-width: 500px; margin: 0 auto;">
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 20px;">✓</div>
+        
+        <h3 style="color: #48bb78; margin-bottom: 20px;">{{ usuario.nombre }} ha sido creado</h3>
+        
+        <div style="background: #f0f0f0; padding: 20px; border-radius: 5px; margin-bottom: 20px; text-align: left;">
+            <p style="margin: 10px 0;"><strong>Email:</strong> {{ usuario.email }}</p>
+            <p style="margin: 10px 0;"><strong>Contraseña Temporal:</strong></p>
+            <div style="background: white; padding: 10px; border-radius: 3px; border: 2px solid #667eea; font-family: monospace; font-weight: bold; font-size: 16px; color: #667eea; word-break: break-all;">
+                {{ password }}
+            </div>
+        </div>
+        
+        <p style="color: #666; margin-bottom: 20px;">
+            El usuario deberá cambiar esta contraseña en su primer inicio de sesión.
+        </p>
+        
+        <a href="{{ url_for('admin_usuarios') }}" class="btn btn-success" style="display: inline-block;">
+            Volver al Panel de Usuarios
+        </a>
+    </div>
+</div>
+
+<style>
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Proveedores - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Proveedores</h2>
+    <a href="{{ url_for('nuevo_proveedor') }}" class="btn btn-success">+ Nuevo Proveedor</a>
+</div>
+
+{% if proveedores %}
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>CUIT</th>
+            <th>Teléfono</th>
+            <th>Saldo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for proveedor in proveedores %}
+        <tr>
+            <td><strong>{{ proveedor.nombre }}</strong></td>
+            <td>{{ proveedor.cuit or '-' }}</td>
+            <td>{{ proveedor.telefono or '-' }}</td>
+            <td>${{ "%.2f"|format(proveedor.saldo) }}</td>
+            <td>
+                {% if proveedor.activo %}
+                <span class="badge badge-success">Activo</span>
+                {% else %}
+                <span class="badge badge-danger">Inactivo</span>
+                {% endif %}
+            </td>
+            <td class="actions">
+                <a href="{{ url_for('editar_proveedor', id=proveedor.id) }}" class="btn" style="padding: 8px 15px; font-size: 12px;">Editar</a>
+                <button onclick="eliminar({{ proveedor.id }}, '{{ proveedor.nombre }}')" class="btn btn-danger" style="padding: 8px 15px; font-size: 12px;">Eliminar</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="header" style="text-align: center; color: #a0aec0;">
+    <p>No hay proveedores aún. <a href="{{ url_for('nuevo_proveedor') }}">Crear el primer proveedor</a></p>
+</div>
+{% endif %}
+
+<script>
+document.getElementById('filtro')?.addEventListener('keyup', function() {
+    const filtro = this.value.toLowerCase();
+    const filas = document.querySelectorAll('.fila-datos');
+    filas.forEach(fila => {
+        const busqueda = fila.getAttribute('data-busqueda');
+        fila.style.display = busqueda.includes(filtro) ? '' : 'none';
+    });
+});
+
+function eliminar(id, nombre) {
+    if (confirm(`¿Está seguro de que desea eliminar a "${nombre}"?`)) {
+        fetch(`/proveedores/${id}/eliminar`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(e => alert('Error: ' + e));
+    }
+}
+</script>
+{% endblock %}

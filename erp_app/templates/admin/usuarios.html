@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ etiq.titulo }} - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>{{ etiq.titulo }}</h2>
+    <a href="{{ url_for('nuevo_usuario') }}" class="btn btn-success">➕ {{ etiq.agregar_usuario }}</a>
+</div>
+
+{% if usuarios %}
+<table class="table" style="font-size: 13px;">
+    <thead>
+        <tr style="background: #f7fafc;">
+            <th style="padding: 12px; text-align: left;">{{ etiq.email }}</th>
+            <th style="padding: 12px; text-align: left;">{{ etiq.nombre }}</th>
+            <th style="padding: 12px; text-align: left;">{{ etiq.rol }}</th>
+            <th style="padding: 12px; text-align: left;">{{ etiq.permisos }}</th>
+            <th style="padding: 12px; text-align: left;">{{ etiq.estado }}</th>
+            <th style="padding: 12px; text-align: left;">{{ etiq.fecha_creacion }}</th>
+            <th style="padding: 12px; text-align: left;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for u in usuarios %}
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 12px;"><strong>{{ u.email }}</strong></td>
+            <td style="padding: 12px;">{{ u.nombre }}</td>
+            <td style="padding: 12px;">
+                <span style="background: {% if u.rol == 'admin' %}#fed7d7{% else %}#bef3be{% endif %}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; color: {% if u.rol == 'admin' %}#742a2a{% else %}#22543d{% endif %};">
+                    {{ u.rol }}
+                </span>
+            </td>
+            <td style="padding: 12px;">
+                <span style="background: #dbeafe; padding: 4px 8px; border-radius: 4px; font-size: 11px; color: #1e3a8a;">
+                    {{ u.permisos }}
+                </span>
+            </td>
+            <td style="padding: 12px;">
+                {% if u.activo %}
+                    <span style="color: #22863a; font-weight: 600;">✓ Activo</span>
+                {% else %}
+                    <span style="color: #cb2431; font-weight: 600;">✗ Inactivo</span>
+                {% endif %}
+            </td>
+            <td style="padding: 12px; color: #666; font-size: 12px;">{{ u.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+            <td style="padding: 12px;">
+                <a href="{{ url_for('editar_usuario', usuario_id=u.id) }}" class="btn-link">Editar</a>
+                <button type="button" class="btn-link" onclick="resetearPassword({{ u.id }})">Blanquear</button>
+                <button type="button" class="btn-link" onclick="eliminarUsuario({{ u.id }})">Eliminar</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div style="text-align: center; padding: 40px; color: #999;">
+    <p>No hay usuarios registrados</p>
+</div>
+{% endif %}
+
+<style>
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .table tr:hover {
+        background: #f9f9f9;
+    }
+    
+    .btn-link {
+        background: none;
+        border: none;
+        color: #667eea;
+        cursor: pointer;
+        text-decoration: underline;
+        padding: 0;
+        margin-right: 15px;
+        font-size: 14px;
+    }
+    
+    .btn-link:hover {
+        color: #764ba2;
+    }
+</style>
+
+<script>
+function eliminarUsuario(id) {
+    if (confirm('¿Está seguro de que desea eliminar al usuario con ID ' + id + '?')) {
+        fetch(`/admin/usuarios/${id}/eliminar`, {
+            method: 'POST'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+    }
+}
+
+function resetearPassword(id) {
+    if (confirm('¿Desea generar una nueva contraseña temporal?')) {
+        fetch(`/admin/usuarios/${id}/resetear-password`, {
+            method: 'POST'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert('Nueva contraseña temporal: ' + data.password);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

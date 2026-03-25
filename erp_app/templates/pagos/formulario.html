@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Pago - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Nuevo Pago a Proveedor</h2>
+</div>
+
+{% if error %}
+<div class="error" style="background: #fed7d7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    {{ error }}
+</div>
+{% endif %}
+
+<div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 600px;">
+    <form method="POST">
+        <div class="form-group">
+            <label for="proveedor_id">Proveedor *</label>
+            <select id="proveedor_id" name="proveedor_id" required>
+                <option value="">Seleccionar proveedor</option>
+                {% for proveedor in proveedores %}
+                <option value="{{ proveedor.id }}">{{ proveedor.nombre }} (Deuda: ${{ "%.2f"|format(proveedor.saldo) }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="monto">Monto *</label>
+            <input type="number" id="monto" name="monto" step="0.01" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="metodo">Método de Pago</label>
+            <select id="metodo" name="metodo">
+                <option value="">Seleccionar</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+                <option value="Cheque">Cheque</option>
+                <option value="Tarjeta">Tarjeta</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="referencia">Referencia (Comprobante)</label>
+            <input type="text" id="referencia" name="referencia">
+        </div>
+        
+        <div class="form-group">
+            <label for="notas">Notas</label>
+            <textarea id="notas" name="notas" rows="4"></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-success">Registrar Pago</button>
+            <a href="{{ url_for('listar_pagos') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

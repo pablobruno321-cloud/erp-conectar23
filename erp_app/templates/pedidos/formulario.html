@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Pedido - ERP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .items-table {
+        margin-bottom: 20px;
+    }
+    
+    .items-table input,
+    .items-table select {
+        font-size: 13px;
+        padding: 8px;
+    }
+    
+    .item-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        gap: 10px;
+        margin-bottom: 10px;
+        background: #f7fafc;
+        padding: 10px;
+        border-radius: 5px;
+        align-items: end;
+    }
+    
+    .btn-remove {
+        background: #f56565;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Nuevo Pedido</h2>
+</div>
+
+{% if error %}
+<div class="error" style="background: #fed7d7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    {{ error }}
+</div>
+{% endif %}
+
+<div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 900px;">
+    <form method="POST" id="pedidoForm">
+        
+        <h3 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px;">Datos del Pedido</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label for="cliente_id">Cliente *</label>
+                <select id="cliente_id" name="cliente_id" required>
+                    <option value="">Seleccionar cliente</option>
+                    {% for cliente in clientes %}
+                    <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="prov_logistico_id">Proveedor Logístico</label>
+                <select id="prov_logistico_id" name="prov_logistico_id">
+                    <option value="">Seleccionar</option>
+                    {% for prov in prov_logisticos %}
+                    <option value="{{ prov.id }}">{{ prov.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="mercado">Mercado</label>
+                <input type="text" id="mercado" name="mercado">
+            </div>
+            
+            <div class="form-group">
+                <label for="puesto">Puesto</label>
+                <input type="text" id="puesto" name="puesto">
+            </div>
+        </div>
+        
+        <h3 style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; margin-top: 30px;">Items del Pedido</h3>
+        
+        <div id="itemsContainer">
+            <div class="item-row">
+                <div>
+                    <label>Producto</label>
+                    <select name="producto_0" class="producto-select">
+                        <option value="">Seleccionar producto</option>
+                        {% for producto in productos %}
+                        <option value="{{ producto.id }}" data-costo="{{ producto.costo_unitario }}">
+                            {{ producto.nombre }} ({{ producto.proveedor.nombre }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Cantidad</label>
+                    <input type="number" name="cantidad_0" class="cantidad-input" step="0.01" value="1">
+                </div>
+                <div>
+                    <label>Precio Unit.</label>
+                    <input type="number" name="precio_unitario_0" class="precio-input" step="0.01" value="0">
+                </div>
+                <div>
+                    <label>Subtotal</label>
+                    <input type="number" class="subtotal-input" disabled readonly step="0.01" value="0">
+                </div>
+                <button type="button" class="btn btn-remove btn-remove-item">X</button>
+            </div>
+        </div>
+        
+        <button type="button" class="btn" onclick="agregarItem()" style="margin-top: 10px;">+ Agregar Producto</button>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 30px;">
+            <div class="stat-card">
+                <h3>Costo Total</h3>
+                <div class="value" id="costoTotal">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Precio Venta</h3>
+                <div class="value" id="precioVentaTotal">$0.00</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #48bb78;">
+                <h3>Resultado</h3>
+                <div class="value" id="resultadoTotal">$0.00</div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 30px;">
+            <button type="submit" class="btn btn-success">Crear Pedido</button>
+            <a href="{{ url_for('listar_pedidos') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+        
+        <input type="hidden" id="item_count" name="item_count" value="1">
+    </form>
+</div>
+
+<script>
+let itemCount = 1;
+let itemsData = {};
+
+function agregarItem() {
+    const container = document.getElementById('itemsContainer');
+    
+    const newItem = document.createElement('div');
+    newItem.className = 'item-row';
+    newItem.innerHTML = `
+        <div>
+            <select name="producto_${itemCount}" class="producto-select">
+                <option value="">Seleccionar producto</option>
+                {% for producto in productos %}
+                <option value="{{ producto.id }}" data-costo="{{ producto.costo_unitario }}">
+                    {{ producto.nombre }} ({{ producto.proveedor.nombre }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <input type="number" name="cantidad_${itemCount}" class="cantidad-input" step="0.01" value="1">
+        </div>
+        <div>
+            <input type="number" name="precio_unitario_${itemCount}" class="precio-input" step="0.01" value="0">
+        </div>
+        <div>
+            <input type="number" class="subtotal-input" disabled readonly step="0.01" value="0">
+        </div>
+        <button type="button" class="btn btn-remove btn-remove-item">X</button>
+    `;
+    
+    container.appendChild(newItem);
+    itemCount++;
+    document.getElementById('item_count').value = itemCount;
+    
+    // Agregar listeners a los nuevos elementos
+    agregarListeners();
+}
+
+function agregarListeners() {
+    document.querySelectorAll('.item-row').forEach((row, idx) => {
+        const productoSelect = row.querySelector('.producto-select');
+        const cantidadInput = row.querySelector('.cantidad-input');
+        const precioInput = row.querySelector('.precio-input');
+        const subtotalInput = row.querySelector('.subtotal-input');
+        const removeBtn = row.querySelector('.btn-remove-item');
+        
+        productoSelect.addEventListener('change', calcularTotales);
+        cantidadInput.addEventListener('input', calcularTotales);
+        precioInput.addEventListener('input', calcularTotales);
+        removeBtn.addEventListener('click', () => {
+            row.remove();
+            calcularTotales();
+        });
+    });
+}
+
+function calcularTotales() {
+    let costoTotal = 0;
+    let precioVentaTotal = 0;
+    
+    document.querySelectorAll('.item-row').forEach(row => {
+        const productoSelect = row.querySelector('.producto-select');
+        const cantidadInput = row.querySelector('.cantidad-input');
+        const precioInput = row.querySelector('.precio-input');
+        const subtotalInput = row.querySelector('.subtotal-input');
+        
+        const cantidad = parseFloat(cantidadInput.value) || 0;
+        const precioUnitario = parseFloat(precioInput.value) || 0;
+        const costoUnitario = parseFloat(productoSelect.options[productoSelect.selectedIndex].dataset.costo) || 0;
+        
+        const subtotal = cantidad * precioUnitario;
+        const costo = cantidad * costoUnitario;
+        
+        subtotalInput.value = subtotal.toFixed(2);
+        
+        costoTotal += costo;
+        precioVentaTotal += subtotal;
+    });
+    
+    const resultado = precioVentaTotal - costoTotal;
+    
+    document.getElementById('costoTotal').textContent = '$' + costoTotal.toFixed(2);
+    document.getElementById('precioVentaTotal').textContent = '$' + precioVentaTotal.toFixed(2);
+    document.getElementById('resultadoTotal').textContent = '$' + resultado.toFixed(2);
+}
+
+// Inicializar listeners
+agregarListeners();
+</script>
+{% endblock %}

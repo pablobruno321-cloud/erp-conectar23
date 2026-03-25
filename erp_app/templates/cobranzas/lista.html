@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Cobranzas - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Cobranzas</h2>
+    <a href="{{ url_for('nueva_cobranza') }}" class="btn btn-success">+ Nueva Cobranza</a>
+</div>
+
+{% if cobranzas %}
+<table>
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Monto</th>
+            <th>Método</th>
+            <th>Referencia</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cobranza in cobranzas %}
+        <tr>
+            <td>{{ cobranza.fecha_cobranza.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>{{ cobranza.cliente.nombre }}</td>
+            <td>${{ "%.2f"|format(cobranza.monto) }}</td>
+            <td>{{ cobranza.metodo or '-' }}</td>
+            <td>{{ cobranza.referencia or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="header" style="text-align: center; color: #a0aec0;">
+    <p>No hay cobranzas aún. <a href="{{ url_for('nueva_cobranza') }}">Registrar la primera cobranza</a></p>
+</div>
+{% endif %}
+{% endblock %}

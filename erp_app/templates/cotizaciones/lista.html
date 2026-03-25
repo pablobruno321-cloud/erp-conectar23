@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Cotizaciones - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Cotizaciones</h2>
+    <div>
+        <span style="margin-right: 20px; font-size: 12px;">
+            <strong>Margen por Defecto:</strong> 
+            <input type="number" id="margenDefault" value="{{ margen_default }}" style="width: 60px; padding: 5px;" step="0.1" min="0">
+            <button onclick="actualizarMargenDefault()" class="btn" style="padding: 5px 10px; font-size: 11px;">Guardar</button>
+        </span>
+        <a href="{{ url_for('nueva_cotizacion') }}" class="btn btn-success">+ Nueva Cotización</a>
+    </div>
+</div>
+
+{% if cotizaciones %}
+<div style="overflow-x: auto;">
+<table id="tablaCotizaciones" class="tabla-filtrable">
+    <thead>
+        <tr>
+            <th data-col="producto">Producto <span class="filtro-btn">⋮</span></th>
+            <th data-col="fecha_desde">Desde <span class="filtro-btn">⋮</span></th>
+            <th data-col="fecha_hasta">Hasta <span class="filtro-btn">⋮</span></th>
+            <th data-col="costo">Costo $ <span class="filtro-btn">⋮</span></th>
+            <th data-col="margen">Margen % <span class="filtro-btn">⋮</span></th>
+            <th data-col="precio_venta">Precio Venta $ <span class="filtro-btn">⋮</span></th>
+            <th data-col="estado">Estado <span class="filtro-btn">⋮</span></th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cot in cotizaciones %}
+        <tr class="fila-datos" 
+            data-producto="{{ cot.producto.nombre.lower() }}"
+            data-fecha_desde="{{ cot.fecha_desde }}"
+            data-fecha_hasta="{{ cot.fecha_hasta }}"
+            data-costo="{{ cot.costo_unitario }}"
+            data-margen="{{ cot.margen_ganancia }}"
+            data-precio_venta="{{ cot.precio_venta }}"
+            data-estado="{{ 'Activo' if cot.activo else 'Inactivo' }}">
+            <td>{{ cot.producto.nombre }}</td>
+            <td>{{ cot.fecha_desde.strftime('%d/%m/%Y') }}</td>
+            <td>{{ cot.fecha_hasta.strftime('%d/%m/%Y') }}</td>
+            <td style="text-align: right;">${{ cot.costo_unitario | eur }}</td>
+            <td style="text-align: center;">{{ cot.margen_ganancia }}%</td>
+            <td style="text-align: right;">${{ cot.precio_venta | eur }}</td>
+            <td>
+                {% if cot.activo %}
+                <span class="badge badge-success">Activo</span>
+                {% else %}
+                <span class="badge badge-danger">Inactivo</span>
+                {% endif %}
+            </td>
+            <td class="actions">
+                <a href="{{ url_for('editar_cotizacion', id=cot.id) }}" class="btn" style="padding: 6px 10px; font-size: 11px;">Editar</a>
+                <button onclick="eliminar({{ cot.id }})" class="btn btn-danger" style="padding: 6px 10px; font-size: 11px;">Eliminar</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="header" style="text-align: center; color: #a0aec0;">
+    <p>No hay cotizaciones. <a href="{{ url_for('nueva_cotizacion') }}">Crear la primera</a></p>
+</div>
+{% endif %}
+
+<style>
+.tabla-filtrable { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.tabla-filtrable thead { background: #f7fafc; }
+.tabla-filtrable th {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #e2e8f0;
+    font-weight: 600;
+    font-size: 12px;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+.tabla-filtrable th:hover { background: #edf2f7; }
+.filtro-btn { float: right; color: #667eea; font-size: 10px; }
+.tabla-filtrable td {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+}
+.tabla-filtrable tbody tr:nth-child(odd) { background: #f9fafb; }
+.tabla-filtrable tbody tr:hover { background: #edf2f7; }
+.filtro-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+    min-width: 220px;
+    padding: 12px;
+    display: none;
+}
+.filtro-panel.activo { display: block; }
+.filtro-panel input, .filtro-panel select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+.filtro-panel button {
+    width: 100%;
+    padding: 8px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+</style>
+
+<script>
+// Crear filtros dinámicos
+document.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', (e) => {
+        if (e.target.classList.contains('filtro-btn')) {
+            mostrarFiltro(th);
+        }
+    });
+});
+
+function mostrarFiltro(th) {
+    // Cerrar otros filtros
+    document.querySelectorAll('.filtro-panel.activo').forEach(p => {
+        if (p.parentElement !== th) p.classList.remove('activo');
+    });
+    
+    let panel = th.querySelector('.filtro-panel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.className = 'filtro-panel';
+        const col = th.getAttribute('data-col');
+        
+        panel.innerHTML = `
+            <input type="text" placeholder="Buscar..." id="filtro_${col}" style="margin-bottom: 8px;">
+            <select id="orden_${col}" style="margin-bottom: 8px;">
+                <option value="">Sin orden</option>
+                <option value="asc">Ascendente ↑</option>
+                <option value="desc">Descendente ↓</option>
+            </select>
+            <button onclick="aplicarFiltro('${col}')">Aplicar</button>
+            <button onclick="limpiarFiltro('${col}')" style="background: #a0aec0;">Limpiar</button>
+        `;
+        th.appendChild(panel);
+    }
+    
+    panel.classList.toggle('activo');
+}
+
+function aplicarFiltro(col) {
+    const filtro = document.getElementById(`filtro_${col}`).value.toLowerCase();
+    const orden = document.getElementById(`orden_${col}`).value;
+    const rows = Array.from(document.querySelectorAll('.fila-datos'));
+    
+    // Filtrar
+    rows.forEach(row => {
+        const valor = row.getAttribute(`data-${col}`).toLowerCase();
+        row.style.display = valor.includes(filtro) ? '' : 'none';
+    });
+    
+    // Ordenar
+    if (orden) {
+        const tabla = document.getElementById('tablaCotizaciones');
+        const tbody = tabla.querySelector('tbody');
+        rows.forEach(row => tbody.appendChild(row));
+        
+        rows.sort((a, b) => {
+            let valA = a.getAttribute(`data-${col}`);
+            let valB = b.getAttribute(`data-${col}`);
+            
+            // Intentar convertir a número
+            valA = isNaN(valA) ? valA : parseFloat(valA);
+            valB = isNaN(valB) ? valB : parseFloat(valB);
+            
+            if (orden === 'asc') return valA > valB ? 1 : -1;
+            return valA < valB ? 1 : -1;
+        });
+    }
+}
+
+function limpiarFiltro(col) {
+    document.getElementById(`filtro_${col}`).value = '';
+    document.getElementById(`orden_${col}`).value = '';
+    aplicarFiltro(col);
+    document.getElementById(`filtro_${col}`).parentElement.classList.remove('activo');
+}
+
+function actualizarMargenDefault() {
+    const margen = document.getElementById('margenDefault').value;
+    fetch('/api/config/margen', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({margen_default: margen})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) alert('Margen actualizado a ' + margen + '%');
+    });
+}
+
+function eliminar(id) {
+    if (confirm('¿Eliminar cotización?')) {
+        fetch(`/cotizaciones/${id}/eliminar`, {method: 'POST'})
+        .then(r => r.json())
+        .then(data => { if (data.success) location.reload(); });
+    }
+}
+</script>
+{% endblock %}

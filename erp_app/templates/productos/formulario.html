@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Producto - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Nuevo Producto</h2>
+</div>
+
+{% if error %}
+<div class="error" style="background: #fed7d7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    {{ error }}
+</div>
+{% endif %}
+
+<div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 600px;">
+    <form method="POST">
+        <div class="form-group">
+            <label for="nombre">Nombre *</label>
+            <input type="text" id="nombre" name="nombre" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="proveedor_id">Proveedor *</label>
+            <select id="proveedor_id" name="proveedor_id" required>
+                <option value="">Seleccionar proveedor</option>
+                {% for proveedor in proveedores %}
+                <option value="{{ proveedor.id }}">{{ proveedor.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="clasificacion">Clasificación</label>
+            <input type="text" id="clasificacion" name="clasificacion">
+        </div>
+        
+        <div class="form-group">
+            <label for="variedad">Variedad</label>
+            <input type="text" id="variedad" name="variedad">
+        </div>
+        
+        <div class="form-group">
+            <label for="marca">Marca</label>
+            <input type="text" id="marca" name="marca">
+        </div>
+        
+        <div class="form-group">
+            <label for="envase">Envase</label>
+            <input type="text" id="envase" name="envase">
+        </div>
+        
+        <div class="form-group">
+            <label for="costo_unitario">Costo Unitario ($)</label>
+            <input type="number" id="costo_unitario" name="costo_unitario" step="0.01" value="0">
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-success">Crear Producto</button>
+            <a href="{{ url_for('listar_productos') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

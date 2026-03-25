@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{% if cliente %}Editar Cliente{% else %}Nuevo Cliente{% endif %} - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>{% if cliente %}Editar Cliente{% else %}Nuevo Cliente{% endif %}</h2>
+</div>
+
+{% if error %}
+<div class="error" style="background: #fed7d7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    {{ error }}
+</div>
+{% endif %}
+
+<div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 600px;">
+    <form method="POST">
+        <div class="form-group">
+            <label for="nombre">Nombre *</label>
+            <input type="text" id="nombre" name="nombre" value="{{ cliente.nombre if cliente else '' }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="cuit">CUIT</label>
+            <input type="text" id="cuit" name="cuit" value="{{ cliente.cuit if cliente else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input type="text" id="telefono" name="telefono" value="{{ cliente.telefono if cliente else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" value="{{ cliente.email if cliente else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="direccion">Dirección</label>
+            <input type="text" id="direccion" name="direccion" value="{{ cliente.direccion if cliente else '' }}">
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-success">{{ 'Guardar Cambios' if cliente else 'Crear Cliente' }}</button>
+            <a href="{{ url_for('listar_clientes') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

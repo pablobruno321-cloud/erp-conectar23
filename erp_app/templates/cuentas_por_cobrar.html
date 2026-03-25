@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Cuentas por Cobrar - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>📊 Cuentas por Cobrar</h2>
+</div>
+
+<!-- Resumen General -->
+<div class="stats">
+    <div class="stat-card">
+        <h3>Total Venta</h3>
+        <div class="value">${{ "%.0f"|format(total_venta) }}</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #48bb78;">
+        <h3>Total Cobrado</h3>
+        <div class="value">${{ "%.0f"|format(total_cobrado) }}</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #f56565;">
+        <h3>Total Deuda</h3>
+        <div class="value">${{ "%.0f"|format(total_saldo) }}</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #ed8936;">
+        <h3>% Cobrado</h3>
+        <div class="value">{{ "%.1f"|format((total_cobrado / total_venta * 100) if total_venta > 0 else 0) }}%</div>
+    </div>
+</div>
+
+<!-- Tabla de CxC por Cliente -->
+<div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px;">
+    <h3 style="margin-bottom: 20px; color: #667eea;">Deuda por Cliente</h3>
+    
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+            <tr style="background: #f7fafc; border-bottom: 2px solid #e2e8f0;">
+                <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Cliente</th>
+                <th style="padding: 12px; text-align: right; font-weight: 600; color: #4a5568;">Venta Total</th>
+                <th style="padding: 12px; text-align: right; font-weight: 600; color: #4a5568;">Cobrado</th>
+                <th style="padding: 12px; text-align: right; font-weight: 600; color: #4a5568;">Deuda</th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #4a5568;">% Cobrado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cxc_list %}
+            <tr style="border-bottom: 1px solid #e2e8f0; {% if item.saldo > 0 %}background: #fff5f5;{% endif %}">
+                <td style="padding: 12px; color: #2d3748;">{{ item.nombre }}</td>
+                <td style="padding: 12px; text-align: right; color: #2d3748;">${{ "%.0f"|format(item.total_venta) }}</td>
+                <td style="padding: 12px; text-align: right; color: #22863a;">${{ "%.0f"|format(item.total_cobrado) }}</td>
+                <td style="padding: 12px; text-align: right; color: #cb2431; font-weight: 600;">
+                    ${{ "%.0f"|format(item.saldo) }}
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    <div style="background: #e2e8f0; border-radius: 4px; overflow: hidden; height: 20px;">
+                        <div style="background: {% if item.porcentaje_cobrado == 100 %}#48bb78{% elif item.porcentaje_cobrado >= 50 %}#ed8936{% else %}#f56565{% endif %}; width: {{ item.porcentaje_cobrado }}%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: white; font-weight: 600;">
+                            {% if item.porcentaje_cobrado > 5 %}{{ "%.0f"|format(item.porcentaje_cobrado) }}%{% endif %}
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="background: #edf2f7; border-top: 2px solid #e2e8f0; font-weight: 600; color: #2d3748;">
+                <td style="padding: 12px;">TOTAL</td>
+                <td style="padding: 12px; text-align: right;">${{ "%.0f"|format(total_venta) }}</td>
+                <td style="padding: 12px; text-align: right;">${{ "%.0f"|format(total_cobrado) }}</td>
+                <td style="padding: 12px; text-align: right; color: #f56565;">${{ "%.0f"|format(total_saldo) }}</td>
+                <td style="padding: 12px; text-align: center;">{{ "%.1f"|format((total_cobrado / total_venta * 100) if total_venta > 0 else 0) }}%</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<!-- Opciones de Acciones -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+    <a href="{{ url_for('listar_cobranzas') }}" class="btn" style="text-align: center; display: flex; align-items: center; justify-content: center;">
+        💰 Ver Cobranzas
+    </a>
+    <a href="{{ url_for('index', erp_id=erp_id) }}" class="btn" style="text-align: center; display: flex; align-items: center; justify-content: center;">
+        ← Volver al Dashboard
+    </a>
+</div>
+
+{% endblock %}

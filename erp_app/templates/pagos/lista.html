@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Pagos - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Pagos a Proveedores</h2>
+    <a href="{{ url_for('nuevo_pago') }}" class="btn btn-success">+ Nuevo Pago</a>
+</div>
+
+{% if pagos %}
+<table>
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Proveedor</th>
+            <th>Monto</th>
+            <th>Método</th>
+            <th>Referencia</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pago in pagos %}
+        <tr>
+            <td>{{ pago.fecha_pago.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>{{ pago.proveedor.nombre }}</td>
+            <td>${{ "%.2f"|format(pago.monto) }}</td>
+            <td>{{ pago.metodo or '-' }}</td>
+            <td>{{ pago.referencia or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="header" style="text-align: center; color: #a0aec0;">
+    <p>No hay pagos aún. <a href="{{ url_for('nuevo_pago') }}">Registrar el primer pago</a></p>
+</div>
+{% endif %}
+{% endblock %}

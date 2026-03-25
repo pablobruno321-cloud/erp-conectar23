@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Usuario - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Crear Nuevo Usuario</h2>
+</div>
+
+{% if error %}
+<div style="background: #f56565; color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    {{ error }}
+</div>
+{% endif %}
+
+<div style="max-width: 500px; margin: 0 auto;">
+    <form method="POST" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">Email</label>
+            <input type="email" name="email" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">Nombre Completo</label>
+            <input type="text" name="nombre" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">Contraseña</label>
+            <input type="password" name="password" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">Rol</label>
+            <select name="rol" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+                <option value="usuario">Usuario</option>
+                <option value="admin">Administrador</option>
+            </select>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">Permisos</label>
+            <div style="display: flex; gap: 20px;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="radio" name="permisos" value="view" checked style="margin-right: 8px;">
+                    <span>👁️ Vista (Solo lectura)</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="radio" name="permisos" value="edit" style="margin-right: 8px;">
+                    <span>✏️ Edición (Lectura y escritura)</span>
+                </label>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 600;">
+            Crear Usuario
+        </button>
+        
+        <a href="{{ url_for('admin_usuarios') }}" class="btn" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 600; text-align: center; margin-top: 10px;">
+            Cancelar
+        </a>
+        
+    </form>
+</div>
+
+{% endblock %}

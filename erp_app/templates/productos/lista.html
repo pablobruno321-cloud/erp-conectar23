@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Productos - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Productos</h2>
+    <a href="{{ url_for('nuevo_producto') }}" class="btn btn-success">+ Nuevo Producto</a>
+</div>
+
+{% if productos %}
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Proveedor</th>
+            <th>Clasificación</th>
+            <th>Variedad</th>
+            <th>Costo Unit.</th>
+            <th>Stock</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for producto in productos %}
+        <tr>
+            <td><strong>{{ producto.nombre }}</strong></td>
+            <td>{{ producto.proveedor.nombre }}</td>
+            <td>{{ producto.clasificacion or '-' }}</td>
+            <td>{{ producto.variedad or '-' }}</td>
+            <td>${{ "%.2f"|format(producto.costo_unitario) }}</td>
+            <td>{{ producto.stock }}</td>
+            <td>
+                {% if producto.activo %}
+                <span class="badge badge-success">Activo</span>
+                {% else %}
+                <span class="badge badge-danger">Inactivo</span>
+                {% endif %}
+            </td>
+            <td class="actions">
+                <a href="{{ url_for('editar_producto', id=producto.id) }}" class="btn" style="padding: 8px 15px; font-size: 12px;">Editar</a>
+                <button onclick="eliminar({{ producto.id }}, '{{ producto.nombre }}')" class="btn btn-danger" style="padding: 8px 15px; font-size: 12px;">Eliminar</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="header" style="text-align: center; color: #a0aec0;">
+    <p>No hay productos aún. <a href="{{ url_for('nuevo_producto') }}">Crear el primer producto</a></p>
+</div>
+{% endif %}
+
+<script>
+document.getElementById('filtro')?.addEventListener('keyup', function() {
+    const filtro = this.value.toLowerCase();
+    const filas = document.querySelectorAll('.fila-datos');
+    filas.forEach(fila => {
+        const busqueda = fila.getAttribute('data-busqueda');
+        fila.style.display = busqueda.includes(filtro) ? '' : 'none';
+    });
+});
+
+function eliminar(id, nombre) {
+    if (confirm(`¿Está seguro de que desea eliminar el producto "${nombre}"?`)) {
+        fetch(`/productos/${id}/eliminar`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(e => alert('Error: ' + e));
+    }
+}
+</script>
+{% endblock %}

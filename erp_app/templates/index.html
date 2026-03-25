@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>Dashboard</h2>
+</div>
+
+<div class="stats">
+    <div class="stat-card">
+        <h3>Clientes Activos</h3>
+        <div class="value">{{ total_clientes }}</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #48bb78;">
+        <h3>Proveedores Activos</h3>
+        <div class="value">{{ total_proveedores }}</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #f6ad55;">
+        <h3>Total Pedidos</h3>
+        <div class="value">{{ total_pedidos }}</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #5a9ead;">
+        <h3>Venta Total</h3>
+        <div class="value">${{ venta_total }}</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #f56565;">
+        <h3>Deuda Total Clientes</h3>
+        <div class="value">${{ deuda_clientes }}</div>
+    </div>
+</div>
+
+<!-- Selector de Filtros -->
+<div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: center;">
+    <div style="flex: 1;">
+        <label style="font-weight: 600; font-size: 13px; margin-bottom: 8px; display: block;">Filtrar por Cliente:</label>
+        <select id="selectorClientes" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;">
+            <option value="">-- Todos --</option>
+            {% for cliente in todos_clientes %}
+            <option value="{{ cliente.id }}" {% if cliente.id|string in clientes_filtrados %}selected{% endif %}>
+                {{ cliente.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button onclick="aplicarFiltroClientes()" class="btn" style="padding: 10px 20px; font-size: 12px; align-self: flex-end;">Aplicar Filtro</button>
+</div>
+
+<!-- Gráficos COMPACTOS -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+    <div style="background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0 0 8px 0; color: #667eea; font-size: 12px; font-weight: 600;">Ventas por Mes</h4>
+        <canvas id="chartVentas" style="max-height: 120px;"></canvas>
+    </div>
+    <div style="background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0 0 8px 0; color: #667eea; font-size: 12px; font-weight: 600;">Cobrado por Mes</h4>
+        <canvas id="chartGanancia" style="max-height: 120px;"></canvas>
+    </div>
+</div>
+
+<div class="header" style="margin-top: 30px;">
+    <h2>Acciones Rápidas</h2>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+    <a href="{{ url_for('nuevo_cliente') }}" class="btn" style="text-align: center; display: flex; align-items: center; justify-content: center;">
+        + Nuevo Cliente
+    </a>
+    <a href="{{ url_for('nuevo_proveedor') }}" class="btn" style="text-align: center; display: flex; align-items: center; justify-content: center;">
+        + Nuevo Proveedor
+    </a>
+    <a href="{{ url_for('nuevo_producto') }}" class="btn" style="text-align: center; display: flex; align-items: center; justify-content: center;">
+        + Nuevo Producto
+    </a>
+    <a href="{{ url_for('nuevo_pedido') }}" class="btn btn-success" style="text-align: center; display: flex; align-items: center; justify-content: center;">
+        + Nuevo Pedido
+    </a>
+    <a href="{{ url_for('cuentas_por_cobrar') }}" class="btn" style="text-align: center; display: flex; align-items: center; justify-content: center; background: #f6ad55;">
+        📊 Cuentas por Cobrar
+    </a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Datos para los gráficos
+    const datosVentas = {{ ventas_por_mes | tojson }};
+    const datosGanancia = {{ ganancia_por_mes | tojson }};
+    
+    // Configuración común para gráficos compactos
+    const optionsCompactas = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { 
+            legend: { display: false },
+            tooltip: { titleFont: { size: 8 }, bodyFont: { size: 8 } }
+        },
+        scales: {
+            y: { 
+                grid: { color: 'rgba(0,0,0,0.05)' }, 
+                ticks: { color: '#666', font: { size: 7 } },
+                beginAtZero: true
+            },
+            x: { grid: { display: false }, ticks: { color: '#666', font: { size: 7 } } }
+        }
+    };
+    
+    // Gráfico de Ventas
+    const ctxVentas = document.getElementById('chartVentas').getContext('2d');
+    new Chart(ctxVentas, {
+        type: 'bar',
+        data: {
+            labels: datosVentas.meses,
+            datasets: [{
+                label: 'Ventas',
+                data: datosVentas.valores,
+                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                borderRadius: 2,
+                borderSkipped: false,
+                barThickness: 8
+            }]
+        },
+        options: optionsCompactas
+    });
+    
+    // Gráfico de Ingresos Cobrados por Mes
+    const ctxGanancia = document.getElementById('chartGanancia').getContext('2d');
+    new Chart(ctxGanancia, {
+        type: 'bar',
+        data: {
+            labels: datosGanancia.meses,
+            datasets: [{
+                label: 'Cobrado',
+                data: datosGanancia.cobrada,
+                backgroundColor: 'rgba(72, 187, 120, 0.8)',
+                borderRadius: 2,
+                borderSkipped: false,
+                barThickness: 8
+            }]
+        },
+        options: optionsCompactas
+    });
+    
+    // Función para aplicar filtro
+    function aplicarFiltroClientes() {
+        const cliente_id = document.getElementById('selectorClientes').value;
+        if (cliente_id) {
+            window.location.href = '?clientes=' + cliente_id;
+        } else {
+            window.location.href = window.location.pathname;
+        }
+    }
+</script>
+{% endblock %}

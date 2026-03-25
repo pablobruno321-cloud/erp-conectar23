@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Pedido {{ pedido.numero }} - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>{{ pedido.numero }}</h2>
+    <a href="{{ url_for('listar_pedidos') }}" class="btn btn-secondary">Volver</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+    <div class="stat-card">
+        <h3>Cliente</h3>
+        <div class="value" style="font-size: 18px;">{{ pedido.cliente.nombre }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Fecha</h3>
+        <div class="value" style="font-size: 18px;">{{ pedido.fecha_venta.strftime('%d/%m/%Y') }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Venta</h3>
+        <div class="value">${{ "%.2f"|format(pedido.precio_venta_total) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Costo</h3>
+        <div class="value">${{ "%.2f"|format(pedido.costo_total) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Resultado</h3>
+        <div class="value">${{ "%.2f"|format(pedido.resultado) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Estado</h3>
+        <div style="font-size: 16px; margin-top: 5px;">
+            {% if pedido.entregado %}
+            <span class="badge badge-success">Entregado</span>
+            {% elif pedido.cargado %}
+            <span class="badge badge-info">Cargado</span>
+            {% else %}
+            <span class="badge" style="background: #e2e8f0; color: #2d3748;">Pendiente</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px;">
+    <h3 style="margin-bottom: 20px;">Información del Pedido</h3>
+    <p><strong>Mercado:</strong> {{ pedido.mercado or '-' }}</p>
+    <p><strong>Puesto:</strong> {{ pedido.puesto or '-' }}</p>
+    <p><strong>Proveedor Logístico:</strong> {{ pedido.prov_logistico.nombre if pedido.prov_logistico else '-' }}</p>
+</div>
+
+{% if pedido.items %}
+<div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <h3 style="margin-bottom: 20px;">Items del Pedido</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unit.</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in pedido.items %}
+            <tr>
+                <td><strong>{{ item.producto.nombre }}</strong></td>
+                <td>{{ item.cantidad }}</td>
+                <td>${{ "%.2f"|format(item.precio_unitario) }}</td>
+                <td>${{ "%.2f"|format(item.subtotal) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

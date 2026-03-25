@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ etiq.titulo }} - ERP{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h2>{{ etiq.titulo }}</h2>
+</div>
+
+<div style="max-width: 700px;">
+    <!-- Información del Usuario -->
+    <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+        <h3 style="margin-top: 0; color: #667eea; border-bottom: 2px solid #f0f1f2; padding-bottom: 10px;">👤 Información Personal</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+            <div>
+                <p style="color: #666; font-size: 12px; margin: 0 0 5px 0;">{{ etiq.email }}</p>
+                <p style="color: #2d3748; font-weight: 600; font-size: 16px; margin: 0;">{{ usuario.email }}</p>
+            </div>
+            <div>
+                <p style="color: #666; font-size: 12px; margin: 0 0 5px 0;">{{ etiq.nombre }}</p>
+                <p style="color: #2d3748; font-weight: 600; font-size: 16px; margin: 0;">{{ usuario.nombre }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cambiar Idioma -->
+    <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+        <h3 style="margin-top: 0; color: #667eea; border-bottom: 2px solid #f0f1f2; padding-bottom: 10px;">🌐 {{ etiq.idioma }}</h3>
+        
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <label style="display: flex; align-items: center; cursor: pointer; padding: 12px 15px; border: 2px solid {% if idioma == 'es' %}#667eea{% else %}#e2e8f0{% endif %}; border-radius: 6px; background: {% if idioma == 'es' %}#f0f3ff{% else %}white{% endif %};">
+                <input type="radio" name="idioma" value="es" {% if idioma == 'es' %}checked{% endif %} onchange="cambiarIdioma('es')" style="margin-right: 10px; cursor: pointer;">
+                <span style="cursor: pointer;">🇪🇸 Español</span>
+            </label>
+            
+            <label style="display: flex; align-items: center; cursor: pointer; padding: 12px 15px; border: 2px solid {% if idioma == 'en' %}#667eea{% else %}#e2e8f0{% endif %}; border-radius: 6px; background: {% if idioma == 'en' %}#f0f3ff{% else %}white{% endif %};">
+                <input type="radio" name="idioma" value="en" {% if idioma == 'en' %}checked{% endif %} onchange="cambiarIdioma('en')" style="margin-right: 10px; cursor: pointer;">
+                <span style="cursor: pointer;">🇬🇧 English</span>
+            </label>
+        </div>
+    </div>
+    
+    <!-- Cambiar Contraseña -->
+    <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; color: #667eea; border-bottom: 2px solid #f0f1f2; padding-bottom: 10px;">🔒 {{ etiq.cambiar_contraseña }}</h3>
+        
+        <form onsubmit="cambiarContraseña(event)" style="margin-top: 20px;">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">{{ etiq.contraseña_actual }}</label>
+                <input type="password" id="contraseña_actual" name="contraseña_actual" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">{{ etiq.nueva_contraseña }}</label>
+                <input type="password" id="nueva_contraseña" name="nueva_contraseña" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">{{ etiq.confirmar }}</label>
+                <input type="password" id="confirmar" name="confirmar" required style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
+            </div>
+            
+            <div id="mensaje" style="margin-bottom: 15px; display: none; padding: 12px; border-radius: 6px; font-size: 14px;"></div>
+            
+            <button type="submit" class="btn btn-success" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 600;">
+                {{ etiq.actualizar }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function cambiarIdioma(idioma) {
+    fetch('{{ url_for("cambiar_idioma") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'idioma=' + idioma
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function cambiarContraseña(event) {
+    event.preventDefault();
+    
+    let contraseña_actual = document.getElementById('contraseña_actual').value;
+    let nueva_contraseña = document.getElementById('nueva_contraseña').value;
+    let confirmar = document.getElementById('confirmar').value;
+    
+    if (nueva_contraseña !== confirmar) {
+        mostrarMensaje('Las contraseñas no coinciden', 'error');
+        return;
+    }
+    
+    fetch('{{ url_for("cambiar_contraseña") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'contraseña_actual=' + encodeURIComponent(contraseña_actual) + 
+              '&nueva_contraseña=' + encodeURIComponent(nueva_contraseña) +
+              '&confirmar=' + encodeURIComponent(confirmar)
+    }).then(res => res.json()).then(data => {
+        if (data.error) {
+            mostrarMensaje(data.error, 'error');
+        } else {
+            mostrarMensaje('✓ Contraseña actualizada correctamente', 'success');
+            document.querySelector('form').reset();
+            setTimeout(() => location.href = '{{ url_for("index", erp_id=erp_id) }}', 2000);
+        }
+    }).catch(err => {
+        mostrarMensaje('Error: ' + err, 'error');
+    });
+}
+
+function mostrarMensaje(texto, tipo) {
+    let msg = document.getElementById('mensaje');
+    msg.textContent = texto;
+    msg.style.display = 'block';
+    msg.style.background = tipo === 'error' ? '#fed7d7' : '#bef3be';
+    msg.style.color = tipo === 'error' ? '#742a2a' : '#22543d';
+}
+</script>
+
+{% endblock %}
