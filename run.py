@@ -1,22 +1,21 @@
 import os
 import sys
 
-# Agregamos la ruta de la carpeta actual y de erp_app para que Python no se pierda
-base_dir = os.path.abspath(os.path.dirname(__file__))
-sys.path.insert(0, base_dir)
-sys.path.insert(0, os.path.join(base_dir, 'erp_app'))
+# Mantenemos tus rutas originales para que no falle la importación
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'erp_app'))
 
-# Importamos la función que crea la aplicación
-try:
-    from erp_app.app import create_app
-except ImportError:
-    from app import create_app
+# Esto es lo que tenías en la línea 13
+from app import app
 
-app = create_app()
+if __name__ == '__main__':
+    # Detectar entorno
+    is_production = os.getenv('FLASK_ENV') == 'production'
 
-if __name__ == "__main__":
-    # Render asigna un puerto dinámico (PORT). Si no existe, usamos el 5000.
-    port = int(os.environ.get("PORT", 5000))
-    
-    # 0.0.0.0 es obligatorio para que Render pueda 'ver' tu app desde afuera
-    app.run(host='0.0.0.0', port=port, debug=False)
+    if not is_production:
+        # Desarrollo local
+        app.run(debug=True, host='127.0.0.1', port=5000)
+    else:
+        # PRODUCCIÓN (RENDER): Usamos el puerto que nos asigne el servidor
+        port = int(os.environ.get("PORT", 8000))
+        # host='0.0.0.0' es fundamental
+        app.run(debug=False, host='0.0.0.0', port=port)
